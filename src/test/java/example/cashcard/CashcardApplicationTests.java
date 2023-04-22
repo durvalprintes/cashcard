@@ -11,6 +11,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -20,30 +21,39 @@ class CashcardApplicationTests {
 	TestRestTemplate restTemplate;
 
 	@Test
-	@DisplayName("Testa busca de um recurso CashCard")
+	@DisplayName("Testa busca do recurso CashCard")
 	void shouldReturnACashCardWhenDataIsSaved() {
 		ResponseEntity<String> response = restTemplate.getForEntity("/cashcards/99", String.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
-
 		DocumentContext context = JsonPath.parse(response.getBody());
-
 		Number id = context.read("$.id");
-		Assertions.assertNotNull(id);
 		Assertions.assertEquals(99L, id.longValue());
-
 		Number amount = context.read("$.amount");
-		Assertions.assertNotNull(amount);
 		Assertions.assertEquals(123.45, amount.doubleValue());
 	}
 
 	@Test
-	@DisplayName("Testa falha na busca de um recurso CashCard")
+	@DisplayName("Testa falha na busca do recurso CashCard")
 	void shouldNotReturnACashCardWithAnUnknownId() {
 		ResponseEntity<String> response = restTemplate.getForEntity("/cashcards/1000", String.class);
 
 		Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		Assertions.assertTrue(Optional.ofNullable(response.getBody()).orElse("").isBlank());
 	}
+
+	@Test
+	@DisplayName("Testa criacao do recurso CashCard")
+	void shouldReturnIntoLocationHeaderGetEndpointToTheCashCardCreated() {
+		ResponseEntity<String> response = restTemplate.postForEntity("/cashcards", new CashCardRequest(123.45), String.class);
+
+		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode());
+		Assertions.assertNull(response.getBody());
+		Assertions.assertTrue(
+				Objects.requireNonNull(response.getHeaders().getLocation()).getPath().matches("/cashcards/\\d+"));
+
+	}
+
+
 
 }
