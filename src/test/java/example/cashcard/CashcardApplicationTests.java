@@ -26,6 +26,7 @@ class CashcardApplicationTests {
 		ResponseEntity<String> response = restTemplate.getForEntity("/cashcards/99", String.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+
 		DocumentContext context = JsonPath.parse(response.getBody());
 		Number id = context.read("$.id");
 		Assertions.assertEquals(99L, id.longValue());
@@ -51,6 +52,25 @@ class CashcardApplicationTests {
 		Assertions.assertNull(response.getBody());
 		Assertions.assertTrue(
 				Objects.requireNonNull(response.getHeaders().getLocation()).getPath().matches("/cashcards/\\d+"));
+
+	}
+
+	@Test
+	@DisplayName("Testa busca paginada e ordenada de CashCards")
+	void shouldReturnPaginatedCashCardsSaved() {
+		ResponseEntity<String> response = restTemplate.getForEntity("/cashcards?page=1&size=3&sort=amount,desc", String.class);
+
+		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+		DocumentContext context = JsonPath.parse(response.getBody());
+		Number elements = context.read("$.elements");
+		Assertions.assertEquals(5, elements);
+		Number pages = context.read("$.pages");
+		Assertions.assertEquals(2, pages);
+		Number size = context.read("$.cashCards.size()");
+		Assertions.assertEquals(2, size);
+		Number amount = context.read("$.cashCards[0].amount");
+		Assertions.assertEquals(10.0, amount);
 
 	}
 

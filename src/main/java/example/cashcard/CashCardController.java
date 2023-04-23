@@ -2,6 +2,8 @@ package example.cashcard;
 
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -32,6 +34,12 @@ public class CashCardController {
                                 .buildAndExpand(cashCard.id())
                                 .toUri())
                 .build();
+    }
+
+    @GetMapping
+    public ResponseEntity<CashCardPage> findAll(Pageable pageable) {
+        Page<CashCard> cashCards = repository.findAll(pageable);
+        return ResponseEntity.ok(new CashCardPage(cashCards.getContent(), cashCards.getTotalElements(), cashCards.getTotalPages()));
     }
 
 }
