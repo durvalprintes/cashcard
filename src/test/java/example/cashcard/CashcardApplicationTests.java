@@ -3,6 +3,7 @@ package example.cashcard;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,11 @@ class CashcardApplicationTests {
 
 	@Autowired
 	TestRestTemplate restTemplate;
+
+	@BeforeEach
+	public void setupRestTemplate() {
+		restTemplate = restTemplate.withBasicAuth("test", "pass");
+	}
 
 	@Test
 	@DisplayName("Testa busca do recurso CashCard")
@@ -46,19 +52,20 @@ class CashcardApplicationTests {
 	@Test
 	@DisplayName("Testa criacao do recurso CashCard")
 	void shouldReturnIntoLocationHeaderGetEndpointToTheCashCardCreated() {
-		ResponseEntity<String> response = restTemplate.postForEntity("/cashcards", new CashCardRequest(123.45), String.class);
+		ResponseEntity<String> response = restTemplate
+				.postForEntity("/cashcards", new CashCardRequest(123.45), String.class);
 
 		Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode());
 		Assertions.assertNull(response.getBody());
 		Assertions.assertTrue(
 				Objects.requireNonNull(response.getHeaders().getLocation()).getPath().matches("/cashcards/\\d+"));
-
 	}
 
 	@Test
 	@DisplayName("Testa busca paginada e ordenada de CashCards")
 	void shouldReturnPaginatedCashCardsSaved() {
-		ResponseEntity<String> response = restTemplate.getForEntity("/cashcards?page=1&size=3&sort=amount,desc", String.class);
+		ResponseEntity<String> response = restTemplate
+				.getForEntity("/cashcards?page=1&size=3&sort=amount,desc", String.class);
 
 		Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
 
@@ -71,9 +78,6 @@ class CashcardApplicationTests {
 		Assertions.assertEquals(2, size);
 		Number amount = context.read("$.cashCards[0].amount");
 		Assertions.assertEquals(10.0, amount);
-
 	}
-
-
 
 }
